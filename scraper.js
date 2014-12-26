@@ -95,10 +95,10 @@ var Scraper = function(URL) {
 var FocusScraper = function(URL) {
     var that = Scraper(URL);
 
-    // PUBLIC
-    that.scrapeStrategy = function(html) {
+    // PRIVATE
+    var scrapeStrategy = function(html, genre) {
         var $ = cheerio.load(html);
-        var result = Result();
+        var books = [];
 
         // scrape
         var $bstListItems = $(".items.clearfix li");
@@ -108,14 +108,22 @@ var FocusScraper = function(URL) {
         for (var i = 0; i < 20; i++) {
             var title = $($boxContentBoxes[i]).find(".title.hyphenate").text();
             var autor = $($boxContentBoxes[i]).find(".author").text();
-            title = title.replace(/\n|\r/g, '');
-            autor = autor.replace(/\n|\r/g, '');
-            console.log("title: " + title);
-            console.log("autor: " + autor);
+            title = title.replace(/\n|\r|\s/g, '');
+            autor = autor.replace(/\n|\r|\s/g, '');
+            var book = Book(title, autor, genre);
+            books.push(book);
         }
 
-        return result;
+        return books;
     }
+
+    // PUBLIC
+    that.scrapeSachbuchStrategy = function(html) {
+        return scrapeStrategy(html, sachbuch);
+    };
+    that.scrapeBelletristikStrategy = function(html) {
+        return scrapeStrategy(html, belletristik);
+    };
 
     return that;
 };
@@ -133,44 +141,32 @@ var SpiegelScraper = function(URL) {
         var $autor = $belletristikCell.find('.bstautor');
         return Book($title.text(), $autor.text(), genre);
     };
+    var scrapeStrategy = function(html, index, genre) {
+        $ = cheerio.load(html);
+        var books = [];
+
+        // Tabelle für Bestenliste zeilenweise durchsuchen
+        var $tableRows = $(".bst tr");
+        for (var i = 1; i < $tableRows.length; i++) {
+            var rowDomElem = $tableRows[i];
+            var $row = $(rowDomElem);
+            var $cells = $row.find("td");
+
+            var book = scrapeTableCells($cells, index, genre);
+            books.push(book);
+        }
+
+        return books;
+    };
 
     // PUBLIC
     that.scrapeSachbuchStrategy = function(html) {
-        $ = cheerio.load(html);
-        var books = [];
-
-        // Tabelle für Bestenliste zeilenweise durchsuchen
-        var $tableRows = $(".bst tr");
-        for (var i = 1; i < $tableRows.length; i++) {
-            var rowDomElem = $tableRows[i];
-            var $row = $(rowDomElem);
-            var $cells = $row.find("td");
-
-            var book = scrapeTableCells($cells, 2, sachbuch);
-            books.push(book);
-        }
-
-        return books;
+        return scrapeStrategy(html, 2, sachbuch);
     };
-
     that.scrapeBelletristikStrategy = function(html) {
-        $ = cheerio.load(html);
-        var books = [];
-
-        // Tabelle für Bestenliste zeilenweise durchsuchen
-        var $tableRows = $(".bst tr");
-        for (var i = 1; i < $tableRows.length; i++) {
-            var rowDomElem = $tableRows[i];
-            var $row = $(rowDomElem);
-            var $cells = $row.find("td");
-
-            var book = scrapeTableCells($cells, 0, belletristik);
-            books.push(book);
-        }
-
-        return books;
+        return scrapeStrategy(html, 0, belletristik);
     };
-    
+
     return that;
 };
 
@@ -180,10 +176,16 @@ exports.SpiegelScraper = SpiegelScraper;
 
 // Test
 function main() {
-    var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
-    spiegelScraper.scrape(function(err, result) {
+    // var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
+    // spiegelScraper.scrape(function(err, result) {
+    //     console.log('finished.');
+    //     spiegelScraper.logResult(result);
+    // });
+
+    var focusScraper = FocusScraper(FOCUS_URL);
+    focusScraper.scrape(function(err, result) {
         console.log('finished.');
-        spiegelScraper.logResult(result);
+        focusScraper.logResult(result);
     });
 }
 main();
