@@ -38,18 +38,11 @@ function Result(sachbuchBooks, belletristikBooks) {
 // Template Method Pattern
 var Scraper = function(URL) {
     var that = {};
-    that.URL = URL;
-    that.scrapeSachbuchStrategy = function(html) {
-        console.log('This method must be overriden!');
-    };
-    that.scrapeBelletristikStrategy = function(html) {
-        console.log('This method must be overriden!');
-    };
-    that.scrape = function(callback) {
-        var sachbuchResults = [];
-        var belletristikResults = [];
 
-        // Zuerst den Request für Sachbuch ausführen...
+    /*
+    Erst Sachbuch, dann Belletristik scrapen (sequentiell)
+    */
+    var executeRequest = function(strategy, sachbuchResults, callback) {
         request.get({
             uri: URL.sachbuch,
             encoding: null
@@ -58,49 +51,47 @@ var Scraper = function(URL) {
                 return callback(error);
             }
 
-            // html dekodieren
+            /*
+            Grund der de-kodierung:
+            <title>SPIEGEL-Bestseller: Hardcover - SPIEGEL ONLINE</title>
+    	    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    	    
+    	    iso-8859-1 muss in UTF8 konvertiert werden, da JavaScript auch in UTF-8 kodiert ist.
+    	    Ansonsten werden die Zeichen falsch interpretiert.
+            */
             html = iconv.decode(html, 'iso-8859-1');
             if (response.statusCode == 200) {
-                sachbuchResults = that.scrapeSachbuchStrategy(html);
-
-                // ...und danach den Request für Belletristik
-                request.get({
-                    uri: URL.belletristik,
-                    encoding: null
-                }, function(error, response, html) {
-                    if (error) {
-                        return callback(error);
-                    }
-
-                    // html dekodieren
-                    html = iconv.decode(html, 'iso-8859-1');
-                    if (response.statusCode == 200) {
-                        belletristikResults = that.scrapeBelletristikStrategy(html);
-                        // gebündeltes Resultat zurückgeben
-                        var result = Result(sachbuchResults, belletristikResults);
-                        return callback(null, result);
-                    }
-                });
+                if (strategy === that.scrapeSachbuchStrategy) {
+                    var results = that.scrapeSachbuchStrategy(html);
+                    executeRequest(that.scrapeBelletristikStrategy, results, callback)
+                }
+                else if (strategy === that.scrapeBelletristikStrategy) {
+                    var belletristikResults = that.scrapeBelletristikStrategy(html);
+                    var result = Result(sachbuchResults, belletristikResults);
+                    return callback(null, result);
+                }
             }
         });
     };
-    that.logResult = function(result) {
-        var book = {};
-        console.log("Sachbuch Top 20:");
-        for (var i = 0; i < BOOK_COUNT; i++) {
-            book = result.sachbuchBooks[i];
-            console.log("====" + (i + 1) + "====");
-            console.log(book.title);
-            console.log(book.autor);
-        }
 
-        console.log("\n\nBelletristik Top 20:");
-        for (var i = 0; i < BOOK_COUNT; i++) {
-            book = result.belletristikBooks[i];
-            console.log("====" + (i + 1) + "====");
-            console.log(book.title);
-            console.log(book.autor);
-        }
+    // PUBLIC
+    that.URL = URL;
+    that.scrapeSachbuchStrategy = function(html) {
+        console.log('This method must be overriden!');
+    };
+    that.scrapeBelletristikStrategy = function(html) {
+        console.log('This method must be overriden!');
+    };
+
+    that.scrape = function(callback) {
+        // Mit Sachbüchern beginnen, danach Belletristik
+        executeRequest(that.scrapeSachbuchStrategy, null, function(err, result) {
+            if (err) {
+                return console.stack(err);
+            }
+            console.log("Finished scraping!");
+            callback(null, result);
+        });
     };
 
     return that;
@@ -191,12 +182,12 @@ exports.focusScraper = FocusScraper();
 // Test
 function main() {
 
-    var embedURL = function(books, index) {
+    var embedURL = function(books, index, callback) {
         console.log("generiere URL...");
         var book = books[index];
         amazon.generateAsinURL(book.title, function(err, url) {
             if (err) {
-                return console.log(err);
+                return callback(err);
             }
 
             book.URL = url;
@@ -205,19 +196,28 @@ function main() {
 
             if (index == books.length) {
                 console.log("finished embedding urls.");
-                return;
+                return callback(null, books);
             }
-            embedURL(books, index);
+
+            // WICHTIG: Der callback muss weitergegeben werden!
+            // Verhindern, dass zu viele requests in kurzer Zeit ausgeführt werden
+            setTimeout(function() {
+                embedURL(books, index, callback);
+            }, 1000);
         });
     };
 
     var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
     spiegelScraper.scrape(function(err, result) {
-        console.log('finished.');
-        // 'Iterator'-Funktion: sequentielle ausführung von callbacks
-        embedURL(result.sachbuchBooks, 0);
-        spiegelScraper.logResult(result);
 
+        // 'Iterator'-Funktion: sequentielle ausführung von callbacks
+        embedURL(result.sachbuchBooks, 0, function(error, resultWithURL) {
+            if (error) {
+                return console.log(error);
+            }
+
+            console.dir(resultWithURL);
+        });
     });
 }
 main();
