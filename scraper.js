@@ -17,11 +17,10 @@ var FOCUS_URL = {
 var sachbuch = "sachbuch";
 var belletristik = "belletristik";
 
-function Book(title, autor, genre) {
+function Book(title, autor) {
     var that = {};
     that.title = title;
     that.autor = autor;
-    that.genre = genre;
     return that;
 }
 
@@ -101,7 +100,7 @@ var FocusScraper = function(URL) {
     var that = Scraper(URL);
 
     // PRIVATE
-    var scrapeStrategy = function(html, genre) {
+    var scrapeStrategy = function(html) {
         var $ = cheerio.load(html);
         var books = [];
 
@@ -113,7 +112,7 @@ var FocusScraper = function(URL) {
         for (var i = 0; i < 20; i++) {
             var title = $($boxContentBoxes[i]).find(".title.hyphenate").text();
             var autor = $($boxContentBoxes[i]).find(".author").text();
-            var book = Book(trim(title), trim(autor), genre);
+            var book = Book(trim(title), trim(autor));
             books.push(book);
         }
 
@@ -137,14 +136,14 @@ var SpiegelScraper = function(URL) {
 
     // PRIVATE
     var $ = {};
-    var scrapeTableCells = function($cells, index, genre) {
+    var scrapeTableCells = function($cells, index) {
         var belletristikCellDomElement = $cells[index];
         var $belletristikCell = $(belletristikCellDomElement);
         var $title = $belletristikCell.find('.bsttitel');
         var $autor = $belletristikCell.find('.bstautor');
-        return Book($title.text(), $autor.text(), genre);
+        return Book($title.text(), $autor.text());
     };
-    var scrapeStrategy = function(html, index, genre) {
+    var scrapeStrategy = function(html, index) {
         $ = cheerio.load(html);
         var books = [];
 
@@ -155,7 +154,7 @@ var SpiegelScraper = function(URL) {
             var $row = $(rowDomElem);
             var $cells = $row.find("td");
 
-            var book = scrapeTableCells($cells, index, genre);
+            var book = scrapeTableCells($cells, index);
             books.push(book);
         }
 
