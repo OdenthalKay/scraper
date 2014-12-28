@@ -1,7 +1,9 @@
 var request = require("request");
 var cheerio = require("cheerio");
 var trim = require("trim");
+var iconv = require('iconv-lite');
 var database = require("./scraper-database.js");
+var amazon = require("./amazon-ASIN.js");
 
 var BOOK_COUNT = 20;
 var SPIEGEL_URL = {
@@ -48,20 +50,30 @@ var Scraper = function(URL) {
         var belletristikResults = [];
 
         // Zuerst den Request für Sachbuch ausführen...
-        request(URL.sachbuch, function(error, response, html) {
+        request.get({
+            uri: URL.sachbuch,
+            encoding: null
+        }, function(error, response, html) {
             if (error) {
                 return callback(error);
             }
 
+            // html dekodieren
+            html = iconv.decode(html, 'iso-8859-1');
             if (response.statusCode == 200) {
                 sachbuchResults = that.scrapeSachbuchStrategy(html);
 
                 // ...und danach den Request für Belletristik
-                request(URL.belletristik, function(error, response, html) {
+                request.get({
+                    uri: URL.belletristik,
+                    encoding: null
+                }, function(error, response, html) {
                     if (error) {
                         return callback(error);
                     }
 
+                    // html dekodieren
+                    html = iconv.decode(html, 'iso-8859-1');
                     if (response.statusCode == 200) {
                         belletristikResults = that.scrapeBelletristikStrategy(html);
                         // gebündeltes Resultat zurückgeben
@@ -178,17 +190,34 @@ exports.focusScraper = FocusScraper();
 
 // Test
 function main() {
+
+    var embedURL = function(books, index) {
+        console.log("generiere URL...");
+        var book = books[index];
+        amazon.generateAsinURL(book.title, function(err, url) {
+            if (err) {
+                return console.log(err);
+            }
+
+            book.URL = url;
+            console.log(url);
+            index = index + 1;
+
+            if (index == books.length) {
+                console.log("finished embedding urls.");
+                return;
+            }
+            embedURL(books, index);
+        });
+    };
+
     var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
     spiegelScraper.scrape(function(err, result) {
         console.log('finished.');
+        // 'Iterator'-Funktion: sequentielle ausführung von callbacks
+        embedURL(result.sachbuchBooks, 0);
         spiegelScraper.logResult(result);
-        database.save("spiegel",result);
-    });
 
-    var focusScraper = FocusScraper(FOCUS_URL);
-    focusScraper.scrape(function(err, result) {
-        console.log('finished.');
-        focusScraper.logResult(result);
     });
 }
 main();

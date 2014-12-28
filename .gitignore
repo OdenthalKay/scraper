@@ -1,2 +1,5 @@
 #ignore this folder
 node_modules
+
+#ignore this files
+config.js
