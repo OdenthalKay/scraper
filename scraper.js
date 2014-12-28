@@ -1,5 +1,7 @@
 var request = require("request");
 var cheerio = require("cheerio");
+var trim = require("trim");
+var database = require("./scraper-database.js");
 
 var BOOK_COUNT = 20;
 var SPIEGEL_URL = {
@@ -108,9 +110,7 @@ var FocusScraper = function(URL) {
         for (var i = 0; i < 20; i++) {
             var title = $($boxContentBoxes[i]).find(".title.hyphenate").text();
             var autor = $($boxContentBoxes[i]).find(".author").text();
-            title = title.replace(/\n|\r|\s/g, '');
-            autor = autor.replace(/\n|\r|\s/g, '');
-            var book = Book(title, autor, genre);
+            var book = Book(trim(title), trim(autor), genre);
             books.push(book);
         }
 
@@ -171,16 +171,19 @@ var SpiegelScraper = function(URL) {
 };
 
 exports.SPIEGEL_URL = SPIEGEL_URL;
+exports.FOCUS_URL = FOCUS_URL;
 exports.BOOK_COUNT = BOOK_COUNT;
 exports.SpiegelScraper = SpiegelScraper;
+exports.focusScraper = FocusScraper();
 
 // Test
 function main() {
-    // var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
-    // spiegelScraper.scrape(function(err, result) {
-    //     console.log('finished.');
-    //     spiegelScraper.logResult(result);
-    // });
+    var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
+    spiegelScraper.scrape(function(err, result) {
+        console.log('finished.');
+        spiegelScraper.logResult(result);
+        database.save("spiegel",result);
+    });
 
     var focusScraper = FocusScraper(FOCUS_URL);
     focusScraper.scrape(function(err, result) {
