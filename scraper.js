@@ -6,6 +6,7 @@ var database = require("./scraper-database.js");
 var amazon = require("./amazon-ASIN.js");
 
 var BOOK_COUNT = 20;
+var AWS_REQUEST_DELAY = 500;
 var SPIEGEL_URL = {
     sachbuch: "http://www.spiegel.de/kultur/spiegel-bestseller-hardcover-a-458991.html",
     belletristik: "http://www.spiegel.de/kultur/spiegel-bestseller-hardcover-a-458991.html"
@@ -172,6 +173,33 @@ var SpiegelScraper = function(URL) {
     return that;
 };
 
+var embedAmazonData = function(books, index, callback) {
+    console.log("embed Amazon Data...");
+    var book = books[index];
+    amazon.getData(book.title, function(err, data) {
+        if (err) {
+            return callback(err);
+        }
+
+        // Set Data
+        book.URL = data.URL;
+        book.image = data.image;
+
+        // Return Result, if it was the last book
+        index = index + 1;
+        if (index == books.length) {
+            console.log("finished embedding amazon data.");
+            return callback(null, books);
+        }
+
+        // WICHTIG: Der callback muss weitergegeben werden!
+        // Verhindern, dass zu viele requests in kurzer Zeit ausgeführt werden
+        setTimeout(function() {
+            embedAmazonData(books, index, callback);
+        }, AWS_REQUEST_DELAY);
+    });
+};
+
 exports.SPIEGEL_URL = SPIEGEL_URL;
 exports.FOCUS_URL = FOCUS_URL;
 exports.BOOK_COUNT = BOOK_COUNT;
@@ -180,42 +208,15 @@ exports.focusScraper = FocusScraper();
 
 // Test
 function main() {
-
-    var embedURL = function(books, index, callback) {
-        console.log("generiere URL...");
-        var book = books[index];
-        amazon.generateAsinURL(book.title, function(err, url) {
-            if (err) {
-                return callback(err);
-            }
-
-            book.URL = url;
-            console.log(url);
-            index = index + 1;
-
-            if (index == books.length) {
-                console.log("finished embedding urls.");
-                return callback(null, books);
-            }
-
-            // WICHTIG: Der callback muss weitergegeben werden!
-            // Verhindern, dass zu viele requests in kurzer Zeit ausgeführt werden
-            setTimeout(function() {
-                embedURL(books, index, callback);
-            }, 1000);
-        });
-    };
-
     var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
     spiegelScraper.scrape(function(err, result) {
-
         // 'Iterator'-Funktion: sequentielle ausführung von callbacks
-        embedURL(result.sachbuchBooks, 0, function(error, resultWithURL) {
+        embedAmazonData(result.sachbuchBooks, 0, function(error, resultWithAmazonData) {
             if (error) {
                 return console.log(error);
             }
 
-            console.dir(resultWithURL);
+            console.dir(resultWithAmazonData);
         });
     });
 }

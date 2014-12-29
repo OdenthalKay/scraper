@@ -22,11 +22,16 @@ var generateURL = function(ASIN) {
     return PREFIX + ASIN + "/tag=" + config.ASSOCIATE_ID;
 };
 
-exports.generateAsinURL = function(title, callback) {
+/*
+Data:
+- ASIN
+- cover image
+*/
+exports.getData = function(bookTitle, callback) {
     opHelper.execute('ItemSearch', {
         'SearchIndex': 'Books',
-        'Keywords': title,
-        'ResponseGroup': 'ItemAttributes,Offers'
+        'Keywords': bookTitle,
+        'ResponseGroup': 'ItemAttributes,Offers,Images'
     }, function(err, results) {
         // HTTP request went wrong
         if (err) {
@@ -39,9 +44,16 @@ exports.generateAsinURL = function(title, callback) {
         if (results.ItemSearchResponse.Items[0].TotalResults[0] === "0") {
             return callback(new Error("No book found!"));
         }
-        
+
         var item = results.ItemSearchResponse.Items[0].Item[0];
         var URL = generateURL(item.ASIN);
-        callback(null, URL);
+        var image = item.MediumImage[0].URL[0];
+
+        var amazonResult = {
+            URL: URL,
+            image: image
+        };
+
+        callback(null, amazonResult);
     });
-}
+};
