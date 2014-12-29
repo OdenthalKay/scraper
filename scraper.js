@@ -6,7 +6,7 @@ var database = require("./scraper-database.js");
 var amazon = require("./amazon-ASIN.js");
 
 var BOOK_COUNT = 20;
-var AWS_REQUEST_DELAY = 500;
+var AWS_REQUEST_DELAY = 800;
 var SPIEGEL_URL = {
     sachbuch: "http://www.spiegel.de/kultur/spiegel-bestseller-hardcover-a-458991.html",
     belletristik: "http://www.spiegel.de/kultur/spiegel-bestseller-hardcover-a-458991.html"
@@ -173,6 +173,10 @@ var SpiegelScraper = function(URL) {
     return that;
 };
 
+/*
+ACHTUNG: die einzelnen ergebnisse müssen zusammengeührt werden,
+NICHT einzelne bücher zurückgeben im callback!!
+*/
 var embedAmazonData = function(books, index, callback) {
     console.log("embed Amazon Data...");
     var book = books[index];
@@ -211,12 +215,21 @@ function main() {
     var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
     spiegelScraper.scrape(function(err, result) {
         // 'Iterator'-Funktion: sequentielle ausführung von callbacks
-        embedAmazonData(result.sachbuchBooks, 0, function(error, resultWithAmazonData) {
+        embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
             if (error) {
                 return console.log(error);
             }
-
-            console.dir(resultWithAmazonData);
+            console.dir(sachbuchBooksWithAmazonData);
+            console.log("Finished embedding amazon data in sachbuch books.");
+            console.log("Now embedding amazon data in belletristik books...");
+            embedAmazonData(result.belletristikBooks, 0, function(error, belletristikBooksWithAmazonData) {
+                if (error) {
+                    return console.log(error);
+                }
+                console.log("Finished embedding amazon data in belletristik books.");
+                var document = Result(sachbuchBooksWithAmazonData, belletristikBooksWithAmazonData);
+                database.save("spiegel", document);
+            });
         });
     });
 }

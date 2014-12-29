@@ -4,14 +4,14 @@ var assert = require('assert');
 // Connection URL
 var url = 'mongodb://user:password@ds047940.mongolab.com:47940/scraperdatabase';
 
-var execute = function(strategy, collectionName, document) {
+var execute = function(strategy, collectionName, callback, document) {
     MongoClient.connect(url, function(err, db) {
         assert.equal(null, err);
-        console.log("Connected correctly to server");
+        console.log("Connected correctly to database");
         var collection = db.collection(collectionName);
         
         if (strategy === loadStrategy) {
-            loadStrategy(collection, collectionName, db);
+            loadStrategy(collection, collectionName, db, callback);
         } else if (strategy === saveStrategy) {
             deleteOldDocument(collection);
             saveStrategy(collection, collectionName, document, db);
@@ -25,12 +25,13 @@ var deleteOldDocument = function(collection) {
     });
 };
 
-var loadStrategy = function(collection, collectionName, db) {
+var loadStrategy = function(collection, collectionName, db, callback) {
     collection.find().toArray(function(err, result) {
         assert.equal(err, null);
         assert.equal(result.length, 1, "Collection contains more than one element.");
         console.dir(result);
         console.log("Loaded Document from collection " + collectionName);
+        callback(null, result);
         db.close();
     });
 };
@@ -44,9 +45,10 @@ var saveStrategy = function(collection, collectionName, document, db) {
 };
 
 // PUBLIC
-exports.load = function(collectionName) {
-    execute(loadStrategy, collectionName);
+exports.load = function(collectionName, callback) {
+    execute(loadStrategy, collectionName, callback);
 };
 exports.save = function(collectionName, document) {
-    execute(saveStrategy, collectionName, document);
+    // Callback isn't necessary, because asserts are sufficent
+    execute(saveStrategy, collectionName, null, document);
 }
