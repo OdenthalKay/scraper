@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-ng-app="myApp">
 
 <head>
   <title>Bootstrap Example</title>
@@ -7,10 +7,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+  <script data-require="angular.js@1.0.x" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js" data-semver="1.0.8"></script>
+  <script src="./app.js"></script>
+  <script src="./controller.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 </head>
 
-<body>
+<body data-ng-controller="myCtrl">
+
+  <h1>AngularJS Test</h1>
+  <ul>
+    <li data-ng-repeat="book in books">{{book}}</li>
+  </ul>
+
   <div class="container-fluid">
     <!-- Static navbar -->
     <nav class="navbar navbar-inverse">
