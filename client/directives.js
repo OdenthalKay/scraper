@@ -4,6 +4,7 @@ angular.module('myApp').directive('genreTable', function() {
     restrict: 'E',
     replace: 'true',
     scope: {
+      genre: '@',
       books: '=' 
     },
     templateUrl: 'genre-table.html'
