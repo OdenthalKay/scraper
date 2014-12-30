@@ -2,7 +2,8 @@
 
 /* Controllers */
 
-angular.module('myApp.controller', []).controller('myCtrl', function($scope, $http) {
+angular.module('myApp').controller('myCtrl', function myCtrl($scope, $http) {
+    $scope.books = {};
     // TODO: alle Images als URI im gecachten Result speichern, damit
     // nicht jedes mal wieder alle Bilder angefordert werden müssen
     // => geringere Bandbreite UND Seite schneller gerendert!
