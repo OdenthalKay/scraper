@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-  <script data-require="angular.js@1.0.x" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js" data-semver="1.0.8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.8/angular.min.js"></script>
   <script src="./app.js"></script>
   <script src="./controller.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
@@ -15,6 +15,7 @@
 
 <body data-ng-controller="myCtrl" data-ng-init="load()">
 
+  <p>Angular: {{1+1}}</p>
 
   <div class="container-fluid">
     <!-- Static navbar -->
@@ -48,7 +49,9 @@
     <div class="row">
       <div class="col-md-6">
         <div>
+          <!--
           <img src="http://upload.wikimedia.org/wikipedia/commons/3/3e/Logo-der_spiegel.svg" / style="width:auto;height:50px;">
+          !-->
           <table class="table table-striped table-condensed">
             <thead>
               <tr>
@@ -57,9 +60,10 @@
               </tr>
             </thead>
             <tbody>
+    
               <tr ng-repeat="sachbuchBook in books.sachbuchBooks">
                 <td>
-                  <span class="badge">{{$index+1}}</span>
+                  <span class="badge">1</span>
                 </td>
                 <td>
                   <img style="height:100px;width:auto;" src="{{sachbuchBook.image}}" />
@@ -76,7 +80,9 @@
       </div>
       <div class="col-md-6">
         <div>
+          <!--
           <img src="http://www.burda-news.de/sites/default/files/bilder/Focus_Logo_Neu.jpg" / style="width:auto;height:50px;">
+          !-->
           <table class="table table-striped table-condensed">
             <thead>
               <tr>
@@ -86,19 +92,6 @@
             </thead>
             <tbody>
 
-              <tr ng-repeat="belletristikBook in books.belletristikBooks">
-                <td>
-                  <span class="badge">{{$index+1}}</span>
-                </td>
-                <td>
-                  <img style="height:100px;width:auto;" src="{{belletristikBook.image}}" />
-                  <div style="display: inline-block;">
-                    <a href="{{belletristikBook.URL}}" style="color:black;"><strong><u>{{belletristikBook.title}}</u></strong></a>
-                    </br>
-                    <small>{{belletristikBook.autor}}</small>
-                  </div>
-                </td>
-              </tr>
 
             </tbody>
           </table>
