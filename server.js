@@ -7,10 +7,10 @@ var app = express(); // define our app using express
 var bodyParser = require('body-parser');
 var database = require('./scraper-database.js');
 var cache = require('./cache.js');
+var htmlCreater = require('./html-creater.js');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
- console.log(__dirname);
 app.use(bodyParser.urlencoded({
     extended: true
 }));
@@ -22,10 +22,12 @@ app.configure(function () {
     );
 });
 
+app.set('view engine', 'jade');
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
-app.get('/api/books', function(req, res) {
-    res.json(cache.jsonResult);
+app.get('/', function(req, res) {
+    //res.json(cache.jsonResult);
+    res.send(cache.html);
     
     /*
     Das Laden soll immer nur EINMAL zu beginn geschehen,
@@ -41,6 +43,12 @@ app.get('/api/books', function(req, res) {
     //     res.json(result);
     // });
 });
+
+var createHTML = function() {
+    
+    cache.html = htmlCreater.create(); 
+};
+createHTML();
 
 app.listen(process.env.PORT, process.env.IP);
 console.log('Magic happens on port ' + process.env.PORT);
