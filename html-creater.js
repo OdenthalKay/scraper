@@ -4,7 +4,7 @@ var cache = require("./cache.js");
 var spiegelLogoPath = "./img/spiegel-logo.svg";
 
 exports.create = function() {
-    var fn = jade.compileFile('./jade/genre-table.jade', null);
+    var fn = jade.compileFile('./jade/layout.jade', null);
 
     var locals = {
         genres: [{
