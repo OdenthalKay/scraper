@@ -1,23 +1,23 @@
 var jade = require("jade");
 var cache = require("./cache.js");
 
+var spiegelLogoPath = "./img/spiegel-logo.svg";
+
 exports.create = function() {
-    var fn = jade.compileFile('./genre-table.jade', null);
+    var fn = jade.compileFile('./jade/genre-table.jade', null);
 
     var locals = {
         genres: [{
             name: "Sachbuch",
-            magazineLogo: "./img/spiegel-logo.svg",
+            magazineLogo: spiegelLogoPath,
             books: cache.jsonResult.sachbuchBooks
         }, {
             name: "Belletristik",
-            magazineLogo: "./img/spiegel-logo.svg",
+            magazineLogo: spiegelLogoPath,
             books: cache.jsonResult.belletristikBooks
         }, ]
     };
 
     var html = fn(locals);
-    console.log(html);
-
     return html;
 };

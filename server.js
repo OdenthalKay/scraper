@@ -26,29 +26,13 @@ app.set('view engine', 'jade');
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 app.get('/', function(req, res) {
-    //res.json(cache.jsonResult);
     res.send(cache.html);
-    
-    /*
-    Das Laden soll immer nur EINMAL zu beginn geschehen,
-    danach wird immer das gecachte Objekt zurückgegeben
-    => Speedup von 10!
-    */
-    
-    // database.load('spiegel', function(error, result) {
-    //     if (error) {
-    //         res.json(error);
-    //     }
-
-    //     res.json(result);
-    // });
 });
 
 var createHTML = function() {
-    
     cache.html = htmlCreater.create(); 
 };
 createHTML();
 
 app.listen(process.env.PORT, process.env.IP);
-console.log('Magic happens on port ' + process.env.PORT);
+console.log('Server is running on port ' + process.env.PORT);
