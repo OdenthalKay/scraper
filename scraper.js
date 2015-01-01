@@ -17,6 +17,8 @@ var FOCUS_URL = {
 };
 var sachbuch = "sachbuch";
 var belletristik = "belletristik";
+var SPIEGEL = "spiegel";
+var FOCUS = "focus";
 
 function Book(title, autor) {
     var that = {};
@@ -25,10 +27,10 @@ function Book(title, autor) {
     return that;
 }
 
-function Result(sachbuchBooks, belletristikBooks) {
+function DatabaseDocument(spiegelData, focusData) {
     var that = {
-        sachbuchBooks: sachbuchBooks,
-        belletristikBooks: belletristikBooks
+        spiegel: spiegelData,
+        focus: focusData
     };
 
     return that;
@@ -43,8 +45,17 @@ var Scraper = function(URL) {
     Erst Sachbuch, dann Belletristik scrapen (sequentiell)
     */
     var executeRequest = function(strategy, sachbuchResults, callback) {
+        var UrlString = "";
+        if (strategy === that.scrapeSachbuchStrategy) {
+            UrlString = URL.sachbuch
+        } else if (strategy === that.scrapeBelletristikStrategy) {
+            
+            UrlString = URL.belletristik;
+        }
+    
+        // Request mit sach- oder belletristik-URL ausführen
         request.get({
-            uri: URL.sachbuch,
+            uri: UrlString,
             encoding: null
         }, function(error, response, html) {
             if (error) {
@@ -59,15 +70,26 @@ var Scraper = function(URL) {
     	    iso-8859-1 muss in UTF8 konvertiert werden, da JavaScript auch in UTF-8 kodiert ist.
     	    Ansonsten werden die Zeichen falsch interpretiert.
             */
-            html = iconv.decode(html, 'iso-8859-1');
+
+            // NUR BEIM SPIEGEL!
+            if (that.magazineName === SPIEGEL) {
+                html = iconv.decode(html, 'iso-8859-1');
+            }
+
             if (response.statusCode == 200) {
                 if (strategy === that.scrapeSachbuchStrategy) {
                     var results = that.scrapeSachbuchStrategy(html);
                     executeRequest(that.scrapeBelletristikStrategy, results, callback)
                 }
                 else if (strategy === that.scrapeBelletristikStrategy) {
+                    console.log(belletristikResults);
                     var belletristikResults = that.scrapeBelletristikStrategy(html);
-                    var result = Result(sachbuchResults, belletristikResults);
+                    
+                    // Gebündeltes Resultat zurückgegeben
+                    var result = {
+                      sachbuchBooks: sachbuchResults,
+                      belletristikBooks: belletristikResults
+                    };
                     return callback(null, result);
                 }
             }
@@ -87,7 +109,7 @@ var Scraper = function(URL) {
         // Mit Sachbüchern beginnen, danach Belletristik
         executeRequest(that.scrapeSachbuchStrategy, null, function(err, result) {
             if (err) {
-                return console.stack(err);
+                return console.log(err);
             }
             console.log("Finished scraping!");
             callback(null, result);
@@ -121,6 +143,7 @@ var FocusScraper = function(URL) {
     }
 
     // PUBLIC
+    that.magazineName = FOCUS;
     that.scrapeSachbuchStrategy = function(html) {
         return scrapeStrategy(html, sachbuch);
     };
@@ -163,6 +186,7 @@ var SpiegelScraper = function(URL) {
     };
 
     // PUBLIC
+    that.magazineName = SPIEGEL;
     that.scrapeSachbuchStrategy = function(html) {
         return scrapeStrategy(html, 2, sachbuch);
     };
@@ -182,6 +206,8 @@ var embedAmazonData = function(books, index, callback) {
     var book = books[index];
     amazon.getData(book.title, function(err, data) {
         if (err) {
+            
+            
             return callback(err);
         }
 
@@ -210,9 +236,14 @@ exports.BOOK_COUNT = BOOK_COUNT;
 exports.SpiegelScraper = SpiegelScraper;
 exports.focusScraper = FocusScraper();
 
+
+
 // Test
 function main() {
     var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
+    var focusScraper = FocusScraper(FOCUS_URL);
+
+
     spiegelScraper.scrape(function(err, result) {
         // 'Iterator'-Funktion: sequentielle ausführung von callbacks
         embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
@@ -227,8 +258,45 @@ function main() {
                     return console.log(error);
                 }
                 console.log("Finished embedding amazon data in belletristik books.");
-                var document = Result(sachbuchBooksWithAmazonData, belletristikBooksWithAmazonData);
-                database.save("spiegel", document);
+                var spiegelData = {
+                    sachbuchBooks: sachbuchBooksWithAmazonData,
+                    belletristikBooks: belletristikBooksWithAmazonData
+                };
+
+                //DatabaseDocument(sachbuchBooksWithAmazonData, belletristikBooksWithAmazonData);
+                //database.save("spiegel", document);
+
+                console.log("=== Now scraping focus... ===");
+                focusScraper.scrape(function(err, result) {
+                    console.dir(result);
+                    
+                    // 'Iterator'-Funktion: sequentielle ausführung von callbacks
+                    embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
+                        if (error) {
+                            return console.log(error);
+                        }
+                        console.dir(sachbuchBooksWithAmazonData);
+                        console.log("Finished embedding amazon data in sachbuch books.");
+                        console.log("Now embedding amazon data in belletristik books...");
+                        embedAmazonData(result.belletristikBooks, 0, function(error, belletristikBooksWithAmazonData) {
+                            if (error) {
+                                return console.log(error);
+                            }
+                            console.log("Finished embedding amazon data in belletristik books.");
+                            var focusData = {
+                                sachbuchBooks: sachbuchBooksWithAmazonData,
+                                belletristikBooks: belletristikBooksWithAmazonData
+                            };
+                            
+                            var document = DatabaseDocument(spiegelData, focusData);
+                            console.log("=== Final database document ===");
+                            console.dir(document);
+                            database.save("spiegel-und-focus", document);
+                        });
+                    });
+                });
+
+
             });
         });
     });
