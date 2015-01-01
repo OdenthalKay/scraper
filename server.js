@@ -17,8 +17,11 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.configure(function () {
     app.use(
-        "/", //the URL throught which you want to access to you static content
-        express.static(__dirname+"/client") //where your static content is located in your filesystem
+        "/", 
+        // Statische Dateien müssen in skripten nur noch so referenziert werden:
+        // src="/js/index.html"
+        // Das Prefix '/client' wird vorher automatisch gesetzt!
+        express.static(__dirname+"/client") 
     );
 });
 

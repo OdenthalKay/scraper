@@ -1,8 +1,8 @@
 var jade = require("jade");
 var cache = require("./cache.js");
 
-var spiegelLogoPath = "./img/spiegel-logo.svg";
-var focusLogoPath = "./img/focus-logo.png";
+var spiegelLogoPath = "/img/spiegel-logo.svg";
+var focusLogoPath = "/img/focus-logo.png";
 
 exports.create = function() {
     var fn = jade.compileFile('./jade/layout.jade', null);
