@@ -1,9 +1,8 @@
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
-var config = require('./config.js');
 
 // Connection URL
-var url = config.DATABASE_URL;
+var url = process.env.DATABASE_URL;
 
 var execute = function(strategy, collectionName, callback, document) {
     MongoClient.connect(url, function(err, db) {

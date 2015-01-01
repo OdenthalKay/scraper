@@ -5,15 +5,14 @@ and generate the referal URL.
 
 */
 
-var config = require("./config.js");
 var OperationHelper = require('apac').OperationHelper;
 
 var PREFIX = "http://www.amazon.de/dp/";
 
 var opHelper = new OperationHelper({
-    awsId: config.AWS_ACCESS_KEY,
-    awsSecret: config.AWS_SECRET_KEY,
-    assocId: config.ASSOCIATE_ID,
+    awsId: process.env.AWS_ACCESS_KEY,
+    awsSecret: process.env.AWS_SECRET_KEY,
+    assocId: process.env.ASSOCIATE_ID,
     // Nur auf der deutschen Amazon-Seite suchen!
     endPoint: "ecs.amazonaws.de"
 });

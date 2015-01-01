@@ -23,7 +23,20 @@
         "@path": "/.c9/runners",
         "configs": {
             "@inited": "true",
-            "json()": {}
+            "json()": {
+                "Test": {
+                    "command": "server.js",
+                    "debug": true,
+                    "env": {
+                        "ASSOCIATE_ID": "top20bestse02-21",
+                        "AWS_ACCES_KEY": "AKIAI6JWGMP7R3KRWWBQ",
+                        "AWS_SECRETE_KEY": "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",
+                        "DATABASE_URL": "mongodb://user:password@ds047940.mongolab.com:47940/scraperdatabase"
+                    },
+                    "name": "Test",
+                    "runner": "Node.js (default)"
+                }
+            }
         }
     },
     "share": {
