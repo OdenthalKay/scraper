@@ -18,7 +18,7 @@ var opHelper = new OperationHelper({
 });
 
 var generateURL = function(ASIN) {
-    return PREFIX + ASIN + "/tag=" + config.ASSOCIATE_ID;
+    return PREFIX + ASIN + "/tag=" + process.env.ASSOCIATE_ID;
 };
 
 /*

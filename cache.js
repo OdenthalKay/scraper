@@ -1,7 +1,7 @@
 exports.html = "";
 exports.jsonResult = {
     "_id": {
-        "$oid": "54a58b8a90bd91661333b39b"
+        "$oid": "54aa713d7380f2c434c11d74"
     },
     "spiegel": {
         "sachbuchBooks": [
@@ -130,8 +130,8 @@ exports.jsonResult = {
             {
                 "title": "Passagier 23",
                 "autor": "Fitzek, Sebastian",
-                "URL": "http://www.amazon.de/dp/B00K64SO4Y/tag=top20bestse00-21",
-                "image": "http://ecx.images-amazon.com/images/I/511yWi1Y%2BWL._SL160_.jpg"
+                "URL": "http://www.amazon.de/dp/342619919X/tag=top20bestse00-21",
+                "image": "http://ecx.images-amazon.com/images/I/515HxjX7GXL._SL160_.jpg"
             },
             {
                 "title": "Kinder der Freiheit",
@@ -208,8 +208,8 @@ exports.jsonResult = {
             {
                 "title": "Die Analphabetin, die rechnen konnte",
                 "autor": "Jonasson, Jonas",
-                "URL": "http://www.amazon.de/dp/3570585123/tag=top20bestse00-21",
-                "image": "http://ecx.images-amazon.com/images/I/51nUvKK14mL._SL160_.jpg"
+                "URL": "http://www.amazon.de/dp/3867178879/tag=top20bestse00-21",
+                "image": "http://ecx.images-amazon.com/images/I/61%2B8EVI-DfL._SL160_.jpg"
             },
             {
                 "title": "Gräser der Nacht",
@@ -382,8 +382,8 @@ exports.jsonResult = {
             {
                 "title": "Passagier 23",
                 "autor": "Sebastian Fitzek",
-                "URL": "http://www.amazon.de/dp/B00K64SO4Y/tag=top20bestse00-21",
-                "image": "http://ecx.images-amazon.com/images/I/511yWi1Y%2BWL._SL160_.jpg"
+                "URL": "http://www.amazon.de/dp/342619919X/tag=top20bestse00-21",
+                "image": "http://ecx.images-amazon.com/images/I/515HxjX7GXL._SL160_.jpg"
             },
             {
                 "title": "Kinder der Freiheit",
