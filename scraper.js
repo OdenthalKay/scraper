@@ -1,5 +1,6 @@
 var request = require("request");
 var cheerio = require("cheerio");
+var async = require("async");
 var trim = require("trim");
 var iconv = require('iconv-lite');
 var database = require("./scraper-database.js");
@@ -41,35 +42,15 @@ function DatabaseDocument(spiegelData, focusData) {
 var Scraper = function(URL) {
     var that = {};
 
-    /*
-    Erst Sachbuch, dann Belletristik scrapen (sequentiell)
-    */
-    var executeRequest = function(strategy, sachbuchResults, callback) {
-        var UrlString = "";
-        if (strategy === that.scrapeSachbuchStrategy) {
-            UrlString = URL.sachbuch
-        } else if (strategy === that.scrapeBelletristikStrategy) {
-            
-            UrlString = URL.belletristik;
-        }
-    
-        // Request mit sach- oder belletristik-URL ausführen
+    // ein HTTP-GET request
+    var scrapeRequest = function(URL, strategy, callback) {
         request.get({
-            uri: UrlString,
+            uri: URL,
             encoding: null
         }, function(error, response, html) {
             if (error) {
                 return callback(error);
             }
-
-            /*
-            Grund der de-kodierung:
-            <title>SPIEGEL-Bestseller: Hardcover - SPIEGEL ONLINE</title>
-    	    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-    	    
-    	    iso-8859-1 muss in UTF8 konvertiert werden, da JavaScript auch in UTF-8 kodiert ist.
-    	    Ansonsten werden die Zeichen falsch interpretiert.
-            */
 
             // NUR BEIM SPIEGEL!
             if (that.magazineName === SPIEGEL) {
@@ -77,22 +58,41 @@ var Scraper = function(URL) {
             }
 
             if (response.statusCode == 200) {
-                if (strategy === that.scrapeSachbuchStrategy) {
-                    var results = that.scrapeSachbuchStrategy(html);
-                    executeRequest(that.scrapeBelletristikStrategy, results, callback)
-                }
-                else if (strategy === that.scrapeBelletristikStrategy) {
-                    console.log(belletristikResults);
-                    var belletristikResults = that.scrapeBelletristikStrategy(html);
-                    
-                    // Gebündeltes Resultat zurückgegeben
-                    var result = {
-                      sachbuchBooks: sachbuchResults,
-                      belletristikBooks: belletristikResults
-                    };
-                    return callback(null, result);
-                }
+                var results = strategy(html);
+                callback(null, results);
             }
+        });
+    };
+
+    // Sachbuch und Belletristik sequentiell hintereinander scrapen
+    var execRequests = function(callback) {
+        async.waterfall([
+            function(callback) {
+                scrapeRequest(URL.sachbuch, that.scrapeSachbuchStrategy, function(err, sachbuchResult) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    callback(null, sachbuchResult);
+                });
+            },
+            function(sachbuchResult, callback) {
+                scrapeRequest(URL.belletristik, that.scrapeBelletristikStrategy, function(err, belletristikResult) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    // gebündeltes Resultat zurückgeben
+                    var result = {
+                        sachbuchBooks: sachbuchResult,
+                        belletristikBooks: belletristikResult
+                    };
+                    callback(null, result);
+                });
+            }
+        ], function(err, result) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, result);
         });
     };
 
@@ -106,8 +106,7 @@ var Scraper = function(URL) {
     };
 
     that.scrape = function(callback) {
-        // Mit Sachbüchern beginnen, danach Belletristik
-        executeRequest(that.scrapeSachbuchStrategy, null, function(err, result) {
+        execRequests(function(err, result) {
             if (err) {
                 return console.log(err);
             }
@@ -206,8 +205,8 @@ var embedAmazonData = function(books, index, callback) {
     var book = books[index];
     amazon.getData(book.title, function(err, data) {
         if (err) {
-            
-            
+
+
             return callback(err);
         }
 
@@ -243,7 +242,6 @@ function main() {
     var spiegelScraper = SpiegelScraper(SPIEGEL_URL);
     var focusScraper = FocusScraper(FOCUS_URL);
 
-
     spiegelScraper.scrape(function(err, result) {
         // 'Iterator'-Funktion: sequentielle ausführung von callbacks
         embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
@@ -263,13 +261,10 @@ function main() {
                     belletristikBooks: belletristikBooksWithAmazonData
                 };
 
-                //DatabaseDocument(sachbuchBooksWithAmazonData, belletristikBooksWithAmazonData);
-                //database.save("spiegel", document);
-
                 console.log("=== Now scraping focus... ===");
                 focusScraper.scrape(function(err, result) {
                     console.dir(result);
-                    
+
                     // 'Iterator'-Funktion: sequentielle ausführung von callbacks
                     embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
                         if (error) {
@@ -287,7 +282,7 @@ function main() {
                                 sachbuchBooks: sachbuchBooksWithAmazonData,
                                 belletristikBooks: belletristikBooksWithAmazonData
                             };
-                            
+
                             var document = DatabaseDocument(spiegelData, focusData);
                             console.log("=== Final database document ===");
                             console.dir(document);
@@ -295,8 +290,6 @@ function main() {
                         });
                     });
                 });
-
-
             });
         });
     });

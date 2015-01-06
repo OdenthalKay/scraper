@@ -35,6 +35,17 @@
                     },
                     "name": "Test",
                     "runner": "Node.js (default)"
+                },
+                "server": {
+                    "command": "server.js",
+                    "debug": true,
+                    "env": {
+                        "ASSOCIATE_ID": "top20bestse00-21",
+                        "AWS_ACCESS_KEY": "AKIAITN27WZVECW62ROA",
+                        "AWS_SECRET_KEY": "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"
+                    },
+                    "name": "server",
+                    "runner": "Node.js (default)"
                 }
             }
         }
