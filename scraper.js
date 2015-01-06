@@ -68,12 +68,7 @@ var Scraper = function(URL) {
     var execRequests = function(callback) {
         async.waterfall([
             function(callback) {
-                scrapeRequest(URL.sachbuch, that.scrapeSachbuchStrategy, function(err, sachbuchResult) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    callback(null, sachbuchResult);
-                });
+                scrapeRequest(URL.sachbuch, that.scrapeSachbuchStrategy, callback);
             },
             function(sachbuchResult, callback) {
                 scrapeRequest(URL.belletristik, that.scrapeBelletristikStrategy, function(err, belletristikResult) {
@@ -244,54 +239,54 @@ function main() {
 
     spiegelScraper.scrape(function(err, result) {
         // 'Iterator'-Funktion: sequentielle ausführung von callbacks
-        embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
-            if (error) {
-                return console.log(error);
-            }
-            console.dir(sachbuchBooksWithAmazonData);
-            console.log("Finished embedding amazon data in sachbuch books.");
-            console.log("Now embedding amazon data in belletristik books...");
-            embedAmazonData(result.belletristikBooks, 0, function(error, belletristikBooksWithAmazonData) {
-                if (error) {
-                    return console.log(error);
-                }
-                console.log("Finished embedding amazon data in belletristik books.");
-                var spiegelData = {
-                    sachbuchBooks: sachbuchBooksWithAmazonData,
-                    belletristikBooks: belletristikBooksWithAmazonData
-                };
+        // embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
+        //     if (error) {
+        //         return console.log(error);
+        //     }
+        //     console.dir(sachbuchBooksWithAmazonData);
+        //     console.log("Finished embedding amazon data in sachbuch books.");
+        //     console.log("Now embedding amazon data in belletristik books...");
+        //     embedAmazonData(result.belletristikBooks, 0, function(error, belletristikBooksWithAmazonData) {
+        //         if (error) {
+        //             return console.log(error);
+        //         }
+        //         console.log("Finished embedding amazon data in belletristik books.");
+        //         var spiegelData = {
+        //             sachbuchBooks: sachbuchBooksWithAmazonData,
+        //             belletristikBooks: belletristikBooksWithAmazonData
+        //         };
 
-                console.log("=== Now scraping focus... ===");
-                focusScraper.scrape(function(err, result) {
-                    console.dir(result);
+        //         console.log("=== Now scraping focus... ===");
+        //         focusScraper.scrape(function(err, result) {
+        //             console.dir(result);
 
-                    // 'Iterator'-Funktion: sequentielle ausführung von callbacks
-                    embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
-                        if (error) {
-                            return console.log(error);
-                        }
-                        console.dir(sachbuchBooksWithAmazonData);
-                        console.log("Finished embedding amazon data in sachbuch books.");
-                        console.log("Now embedding amazon data in belletristik books...");
-                        embedAmazonData(result.belletristikBooks, 0, function(error, belletristikBooksWithAmazonData) {
-                            if (error) {
-                                return console.log(error);
-                            }
-                            console.log("Finished embedding amazon data in belletristik books.");
-                            var focusData = {
-                                sachbuchBooks: sachbuchBooksWithAmazonData,
-                                belletristikBooks: belletristikBooksWithAmazonData
-                            };
+        //             // 'Iterator'-Funktion: sequentielle ausführung von callbacks
+        //             embedAmazonData(result.sachbuchBooks, 0, function(error, sachbuchBooksWithAmazonData) {
+        //                 if (error) {
+        //                     return console.log(error);
+        //                 }
+        //                 console.dir(sachbuchBooksWithAmazonData);
+        //                 console.log("Finished embedding amazon data in sachbuch books.");
+        //                 console.log("Now embedding amazon data in belletristik books...");
+        //                 embedAmazonData(result.belletristikBooks, 0, function(error, belletristikBooksWithAmazonData) {
+        //                     if (error) {
+        //                         return console.log(error);
+        //                     }
+        //                     console.log("Finished embedding amazon data in belletristik books.");
+        //                     var focusData = {
+        //                         sachbuchBooks: sachbuchBooksWithAmazonData,
+        //                         belletristikBooks: belletristikBooksWithAmazonData
+        //                     };
 
-                            var document = DatabaseDocument(spiegelData, focusData);
-                            console.log("=== Final database document ===");
-                            console.dir(document);
-                            database.save("spiegel-und-focus", document);
-                        });
-                    });
-                });
-            });
-        });
+        //                     var document = DatabaseDocument(spiegelData, focusData);
+        //                     console.log("=== Final database document ===");
+        //                     console.dir(document);
+        //                     database.save("spiegel-und-focus", document);
+        //                 });
+        //             });
+        //         });
+        //     });
+        // });
     });
 }
 main();
