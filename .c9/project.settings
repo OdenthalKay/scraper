@@ -8,13 +8,14 @@
     "build": {
         "@builder": "auto",
         "@path": "/.c9/builders",
-        "@saveall": "true"
+        "@saveall": true
     },
     "find.nak": {
         "@searchLimit": 100
     },
     "language": {
         "@instanceHighlight": "true",
+        "@semi": "true",
         "@undeclaredVars": "true",
         "@unusedFunctionArgs": "false",
         "@warnLevel": "info"
@@ -34,6 +35,18 @@
                         "DATABASE_URL": "mongodb://user:password@ds047940.mongolab.com:47940/scraperdatabase"
                     },
                     "name": "Test",
+                    "runner": "Node.js (default)"
+                },
+                "scrape": {
+                    "command": "scraper.js",
+                    "debug": true,
+                    "env": {
+                        "ASSOCIATE_ID": "top20bestse00-21",
+                        "AWS_ACCESS_KEY": "AKIAIZ7NVESJYML5R2IA",
+                        "AWS_SECRET_KEY": "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",
+                        "DATABASE_URL": "mongodb://user:password@ds047940.mongolab.com:47940/scraperdatabase"
+                    },
+                    "name": "scrape",
                     "runner": "Node.js (default)"
                 },
                 "server": {
